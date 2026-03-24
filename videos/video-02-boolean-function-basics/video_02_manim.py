@@ -207,7 +207,8 @@ class Video02BooleanFunctionBasics(Scene):
         self.show_takeaway()
 
     def start_voiceover(self, filename: str) -> float:
-        audio_path = AUDIO_DIR / filename
+        preferred_wav = AUDIO_DIR / Path(filename).with_suffix(".wav")
+        audio_path = preferred_wav if preferred_wav.exists() else AUDIO_DIR / filename
         self.add_sound(str(audio_path))
         return AudioSegment.from_file(audio_path).duration_seconds
 
