@@ -292,7 +292,7 @@ class Video02BooleanFunctionBasics(Scene):
         elapsed += 1.4
         self.wait(0.8)
         elapsed += 0.8
-        self.play(group.animate.scale(0.7).to_edge(UP, buff=1.03), run_time=0.9)
+        self.play(group.animate.scale(0.3).to_edge(UP, buff=0.2), run_time=0.9)
         elapsed += 0.9
         self.finish_voiceover(voice_duration, elapsed)
         self.title_group = group
