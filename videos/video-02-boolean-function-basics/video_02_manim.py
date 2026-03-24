@@ -12,7 +12,8 @@ config.partial_movie_dir = str(SCRIPT_DIR / "partial_movie_files" / "{quality}" 
 ZH_FONT = "Noto Sans HK"
 EN_FONT = "Tahoma"
 CODE_FONT = "Consolas"
-AUDIO_DIR = SCRIPT_DIR / "audio"
+LEGACY_AUDIO_DIR = SCRIPT_DIR / "audio"
+PREFERRED_AUDIO_DIR = LEGACY_AUDIO_DIR / "wanlung_normal"
 COVER_PATH = SCRIPT_DIR / "bookcover.png"
 
 
@@ -207,8 +208,18 @@ class Video02BooleanFunctionBasics(Scene):
         self.show_takeaway()
 
     def start_voiceover(self, filename: str) -> float:
-        preferred_wav = AUDIO_DIR / Path(filename).with_suffix(".wav")
-        audio_path = preferred_wav if preferred_wav.exists() else AUDIO_DIR / filename
+        candidates = [
+            PREFERRED_AUDIO_DIR / filename,
+            LEGACY_AUDIO_DIR / filename,
+            PREFERRED_AUDIO_DIR / Path(filename).with_suffix(".wav"),
+            LEGACY_AUDIO_DIR / Path(filename).with_suffix(".wav"),
+        ]
+        audio_path = next(
+            (path for path in candidates if path.exists() and path.stat().st_size > 0),
+            None,
+        )
+        if audio_path is None:
+            raise FileNotFoundError(f"Missing voiceover audio for {filename}")
         self.add_sound(str(audio_path))
         return AudioSegment.from_file(audio_path).duration_seconds
 
