@@ -209,10 +209,10 @@ class Video02BooleanFunctionBasics(Scene):
 
     def start_voiceover(self, filename: str) -> float:
         candidates = [
-            PREFERRED_AUDIO_DIR / filename,
-            LEGACY_AUDIO_DIR / filename,
             PREFERRED_AUDIO_DIR / Path(filename).with_suffix(".wav"),
+            PREFERRED_AUDIO_DIR / filename,
             LEGACY_AUDIO_DIR / Path(filename).with_suffix(".wav"),
+            LEGACY_AUDIO_DIR / filename,
         ]
         audio_path = next(
             (path for path in candidates if path.exists() and path.stat().st_size > 0),
@@ -239,8 +239,8 @@ class Video02BooleanFunctionBasics(Scene):
             zh_text("制片人", font_size=16, color=GREY_A),
             en_text("Peter", font_size=20, color=WHITE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.05)
-        intro_producer.to_edge(LEFT, buff=0.16)
-        intro_producer.shift(DOWN * 0.9)
+        intro_producer.to_edge(LEFT, buff=4.0)
+        intro_producer.shift(DOWN * 0.7)
 
         cover = ImageMobject(str(COVER_PATH)).set_height(5.35)
         cover.move_to(UP * 0.2)
@@ -322,6 +322,35 @@ class Video02BooleanFunctionBasics(Scene):
 
         cube, nodes, face = make_boolean_cube()
         point_ring = Circle(radius=0.23, color=YELLOW_B, stroke_width=4).move_to(nodes["101"][0].get_center())
+        edge_glow = Line(
+            nodes["100"][0].get_center(),
+            nodes["101"][0].get_center(),
+            color=YELLOW_B,
+            stroke_width=8,
+        )
+
+        build_title = mixed_text("點樣構造 Hypercube", font_size=22, color=BLUE_B, english_terms=["Hypercube"])
+        build_lines = VGroup(
+            mixed_text("1 bit -> 2 點 -> line", font_size=19, color=GREY_A, english_terms=["bit", "line"]),
+            mixed_text("2 bits -> 4 點 -> square", font_size=19, color=GREY_A, english_terms=["bits", "square"]),
+            mixed_text("3 bits -> 8 點 -> cube", font_size=19, color=YELLOW_B, english_terms=["bits", "cube"]),
+            mixed_text("每條邊都只差 1 個 bit", font_size=19, color=GREY_A, english_terms=["bit"]),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
+        build_text = VGroup(build_title, build_lines).arrange(DOWN, aligned_edge=LEFT, buff=0.16)
+        build_panel = VGroup(
+            SurroundingRectangle(build_text, color=BLUE_D, buff=0.18, corner_radius=0.14),
+            build_text,
+        )
+        build_panel.move_to(RIGHT * 3.35 + UP * 1.4)
+
+        edge_note = mixed_text(
+            "例如 100 同 101 只差 1 個 bit，所以會直接相連。",
+            font_size=21,
+            color=GREY_A,
+            english_terms=["bit"],
+        )
+        edge_note.next_to(cube, DOWN, buff=0.32)
+        edge_note.shift(LEFT * 1.0)
 
         note_1 = VGroup(
             mixed_text("每個點都係 1 個 minterm", font_size=24, color=GREY_A, english_terms=["minterm"]),
@@ -334,17 +363,34 @@ class Video02BooleanFunctionBasics(Scene):
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
 
         note_3 = mixed_text(
-            "如果覆蓋到嘅點全部屬於 ON 或 DC，呢個 cube 就係 implicant。",
-            font_size=22,
+            "Hypercube 最大用處，係幫你睇到邊啲 minterm 可以 grouping 成 cube；如果覆蓋到嘅點全部屬於 ON 或 DC，呢個 cube 就係 implicant。",
+            font_size=20,
             color=GREY_A,
-            english_terms=["ON", "DC", "cube", "implicant"],
+            english_terms=["minterm", "grouping", "cube", "ON", "DC", "implicant"],
         )
 
         notes = VGroup(note_1, note_2, note_3).arrange(DOWN, aligned_edge=LEFT, buff=0.32)
-        notes.move_to(RIGHT * 3.25 + DOWN * 0.25)
+        notes.move_to(RIGHT * 3.25 + DOWN * 0.6)
 
-        self.play(FadeIn(section_title, shift=UP * 0.15), FadeIn(cube, shift=LEFT * 0.2), run_time=1.3)
-        elapsed += 1.3
+        self.play(FadeIn(section_title, shift=UP * 0.15), FadeIn(cube, shift=LEFT * 0.2), run_time=1.2)
+        elapsed += 1.2
+        self.play(Create(build_panel[0]), FadeIn(build_title, shift=UP * 0.1), run_time=0.8)
+        elapsed += 0.8
+        self.play(
+            LaggedStart(*[FadeIn(line, shift=RIGHT * 0.08) for line in build_lines], lag_ratio=0.18),
+            run_time=1.5,
+        )
+        elapsed += 1.5
+        self.play(Indicate(build_lines[2], color=YELLOW_B), run_time=0.8)
+        elapsed += 0.8
+        self.play(
+            Create(edge_glow),
+            Indicate(nodes["100"][0], color=YELLOW),
+            Indicate(nodes["101"][0], color=YELLOW),
+            FadeIn(edge_note, shift=UP * 0.1),
+            run_time=1.1,
+        )
+        elapsed += 1.1
         self.play(Create(point_ring), Indicate(nodes["101"][0], color=YELLOW), FadeIn(note_1, shift=RIGHT * 0.15), run_time=1.0)
         elapsed += 1.0
         self.play(
@@ -359,7 +405,16 @@ class Video02BooleanFunctionBasics(Scene):
         self.wait(0.8)
         elapsed += 0.8
         self.finish_voiceover(voice_duration, elapsed)
-        self.play(FadeOut(section_title), FadeOut(cube), FadeOut(point_ring), FadeOut(notes), run_time=0.8)
+        self.play(
+            FadeOut(section_title),
+            FadeOut(cube),
+            FadeOut(point_ring),
+            FadeOut(edge_glow),
+            FadeOut(edge_note),
+            FadeOut(build_panel),
+            FadeOut(notes),
+            run_time=0.8,
+        )
 
     def show_two_level_description(self):
         voice_duration = self.start_voiceover("03_two_level.mp3")
